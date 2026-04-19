@@ -1,7 +1,7 @@
 package main.model.service;
 
-import main.model.event.EventManager;
-import main.model.event.ResourceEvent;
+import main.event.EventManager;
+import main.event.ResourceEvent;
 import main.model.entity.Pet;
 import main.model.repository.PetRepository;
 import org.springframework.data.domain.Sort;

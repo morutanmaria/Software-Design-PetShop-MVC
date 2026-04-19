@@ -2,8 +2,8 @@ package main.model.service;
 
 import main.model.entity.User;
 import jakarta.servlet.http.HttpSession;
-import main.model.event.EventListener;
-import main.model.event.ResourceEvent;
+import main.event.EventListener;
+import main.event.ResourceEvent;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;

@@ -1,4 +1,4 @@
-package main.model.event;
+package main.event;
 
 public class ResourceEvent {
     private String type;

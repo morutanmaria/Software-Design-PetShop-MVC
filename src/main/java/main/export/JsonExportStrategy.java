@@ -1,9 +1,8 @@
-package main.model.export;
+package main.export;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
 @Component("json")
 public class JsonExportStrategy implements ExportStrategy{
     @Override

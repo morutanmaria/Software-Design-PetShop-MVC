@@ -1,10 +1,8 @@
-package main.model.export;
+package main.export;
 
 
-import main.model.dto.ItemDTO;
-import main.model.dto.PetDTO;
-import main.model.entity.Item;
-import main.model.entity.Pet;
+import main.dto.ItemDTO;
+import main.dto.PetDTO;
 import org.springframework.stereotype.Component;
 
 import java.util.List;

@@ -1,7 +1,7 @@
 package main.model.service;
 
-import main.model.event.EventManager;
-import main.model.event.ResourceEvent;
+import main.event.EventManager;
+import main.event.ResourceEvent;
 import main.model.entity.Item;
 import main.model.repository.ItemRepository;
 import org.springframework.stereotype.Service;

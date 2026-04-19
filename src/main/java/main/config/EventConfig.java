@@ -1,6 +1,6 @@
-package main.model.config;
+package main.config;
 
-import main.model.event.EventManager;
+import main.event.EventManager;
 import main.model.service.NotificationService;
 import org.springframework.context.annotation.Configuration;
 import jakarta.annotation.PostConstruct;

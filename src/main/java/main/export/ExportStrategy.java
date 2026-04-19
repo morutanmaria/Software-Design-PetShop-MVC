@@ -1,4 +1,4 @@
-package main.model.export;
+package main.export;
 
 import java.util.List;
 public interface ExportStrategy {

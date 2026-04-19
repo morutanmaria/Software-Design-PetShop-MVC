@@ -1,4 +1,4 @@
-package main.model.event;
+package main.event;
 
 import org.springframework.stereotype.Component;
 import java.util.ArrayList;

@@ -1,10 +1,10 @@
 package main.model.service;
 
-import main.model.export.CsvExportStrategy;
-import main.model.export.ExportContext;
+import main.export.CsvExportStrategy;
+import main.export.ExportContext;
 
-import main.model.export.JsonExportStrategy;
-import main.model.export.XmlExportStrategy;
+import main.export.JsonExportStrategy;
+import main.export.XmlExportStrategy;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
