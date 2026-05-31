@@ -1,111 +1,122 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-  <title>Pets List</title>
+  <title th:text="#{pets.title}">Pets List</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
+
 <body class="p-4">
 
-<div class="container">
-  <h1>Pets List</h1>
+<div class="d-flex justify-content-end mb-2 gap-2">
+  <a th:href="@{/pets(lang=en)}"
+     th:classappend="${currentLang == 'en'} ? 'btn btn-sm btn-dark' : 'btn btn-sm btn-outline-dark'">
+    🇬🇧 EN
+  </a>
+  <a th:href="@{/pets(lang=ro)}"
+     th:classappend="${currentLang == 'ro'} ? 'btn btn-sm btn-dark' : 'btn btn-sm btn-outline-dark'">
+    🇷🇴 RO
+  </a>
+</div>
 
-  <div th:if="${loggedUser != null and (loggedUser.role == 'ADMIN' or loggedUser.role == 'SELLER')}" class="mb-3">    <a th:href="@{/pets/add}" class="btn btn-success">Add New Pet</a>
+<div id="errorToast" class="toast align-items-center text-bg-danger border-0 position-fixed bottom-0 end-0 m-3"
+     role="alert" aria-live="assertive" aria-atomic="true" style="z-index:9999; min-width:300px;">
+  <div class="d-flex">
+    <div class="toast-body" id="errorToastBody"></div>
+    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 th:text="#{pets.title}">Pets List</h1>
+    <div>
+      <a href="/" class="btn btn-outline-secondary btn-sm me-2">
+        <i class="fa-solid fa-house"></i> <span th:text="#{nav.home}">Home</span>
+      </a>
+      <a href="/chat" class="btn btn-outline-secondary btn-sm">
+        <i class="fa-solid fa-comments"></i> <span th:text="#{nav.chat}">Chat</span>
+      </a>
+    </div>
   </div>
 
-  <form th:action="@{/pets}" method="get" class="mb-3 d-flex">
-    <input type="text" name="search" th:value="${search}" placeholder="Search by name..." class="form-control me-2" />
-    <button type="submit" class="btn btn-primary">Search</button>
+  <div th:if="${loggedUser != null and (loggedUser.role == 'ADMIN' or loggedUser.role == 'SELLER')}"
+       class="mb-3">
+    <a th:href="@{/pets/add}" class="btn btn-success">
+      <i class="fa fa-plus"></i>
+      <span th:text="#{pets.addNew}">Add New Pet</span>
+    </a>
+  </div>
+
+  <form id="searchForm" class="mb-3 d-flex">
+    <input type="text" id="searchInput"
+           th:placeholder="#{pets.search.placeholder}"
+           class="form-control me-2"/>
+    <button type="submit" class="btn btn-primary" th:text="#{pets.search.button}">Search</button>
   </form>
 
   <div class="mb-3">
-
     <form method="get" action="/export/pets" class="d-inline">
       <input type="hidden" name="format" value="json">
-      <input type="hidden" name="name" th:value="${search}">
-      <input type="hidden" name="sortField" th:value="${sortField}">
-      <input type="hidden" name="sortDir" th:value="${sortDir}">
-      <button type="submit" class="btn btn-primary">Export JSON</button>
+      <button type="submit" class="btn btn-primary" th:text="#{pets.export.json}">Export JSON</button>
     </form>
-
     <form method="get" action="/export/pets" class="d-inline">
       <input type="hidden" name="format" value="csv">
-      <input type="hidden" name="name" th:value="${search}">
-      <input type="hidden" name="sortField" th:value="${sortField}">
-      <input type="hidden" name="sortDir" th:value="${sortDir}">
-      <button type="submit" class="btn btn-secondary">Export CSV</button>
+      <button type="submit" class="btn btn-secondary" th:text="#{pets.export.csv}">Export CSV</button>
     </form>
-
     <form method="get" action="/export/pets" class="d-inline">
       <input type="hidden" name="format" value="xml">
-      <input type="hidden" name="name" th:value="${search}">
-      <input type="hidden" name="sortField" th:value="${sortField}">
-      <input type="hidden" name="sortDir" th:value="${sortDir}">
-      <button type="submit" class="btn btn-success">Export XML</button>
+      <button type="submit" class="btn btn-success" th:text="#{pets.export.xml}">Export XML</button>
     </form>
-
   </div>
 
-  <table class="table table-striped table-hover align-middle"
-         style="table-layout: fixed;">
-
+  <table class="table table-striped table-hover align-middle" style="table-layout: fixed;">
     <thead>
     <tr>
-      <th style="width:80px;">Image</th>
+      <th style="width:80px;" th:text="#{pets.table.image}">Image</th>
       <th>
-        Name
-        <a th:href="@{/pets(sortField='name', sortDir='asc', search=${search})}" class="btn btn-sm btn-outline-success ms-1">↑</a>
-        <a th:href="@{/pets(sortField='name', sortDir='desc', search=${search})}" class="btn btn-sm btn-outline-danger ms-1">↓</a>
+        <span th:text="#{pets.table.name}">Name</span>
+        <button onclick="changeSort('name','asc')" class="btn btn-sm btn-outline-success ms-1" type="button">↑</button>
+        <button onclick="changeSort('name','desc')" class="btn btn-sm btn-outline-danger ms-1" type="button">↓</button>
       </th>
-      <th>Species</th>
-      <th>Breed</th>
+      <th th:text="#{pets.table.species}">Species</th>
+      <th th:text="#{pets.table.breed}">Breed</th>
       <th>
-        Age
-        <a th:href="@{/pets(sortField='age', sortDir='asc', search=${search})}" class="btn btn-sm btn-outline-success ms-1">↑</a>
-        <a th:href="@{/pets(sortField='age', sortDir='desc', search=${search})}" class="btn btn-sm btn-outline-danger ms-1">↓</a>
+        <span th:text="#{pets.table.age}">Age</span>
+        <button onclick="changeSort('age','asc')" class="btn btn-sm btn-outline-success ms-1" type="button">↑</button>
+        <button onclick="changeSort('age','desc')" class="btn btn-sm btn-outline-danger ms-1" type="button">↓</button>
       </th>
       <th>
-        Price
-        <a th:href="@{/pets(sortField='price', sortDir='asc', search=${search})}" class="btn btn-sm btn-outline-success ms-1">↑</a>
-        <a th:href="@{/pets(sortField='price', sortDir='desc', search=${search})}" class="btn btn-sm btn-outline-danger ms-1">↓</a>
+        <span th:text="#{pets.table.price}">Price</span>
+        <button onclick="changeSort('price','asc')" class="btn btn-sm btn-outline-success ms-1" type="button">↑</button>
+        <button onclick="changeSort('price','desc')" class="btn btn-sm btn-outline-danger ms-1" type="button">↓</button>
       </th>
-      <th>Actions</th>
+      <th th:text="#{pets.table.actions}">Actions</th>
     </tr>
     </thead>
-
-    <tbody>
-    <tr th:each="pet : ${pets}">
-
-      <!-- IMAGE -->
-      <td class="text-center">
-        <img th:src="${pet.imagePath != null} ? ${pet.imagePath} : '/images/default.png'"
-             style="width:60px; height:60px; object-fit:cover; border-radius:8px;"
-             alt="pet">
-      </td>
-
-      <td th:text="${pet.name}"></td>
-      <td th:text="${pet.species}"></td>
-      <td th:text="${pet.breed}"></td>
-      <td th:text="${pet.age}"></td>
-      <td th:text="${pet.price}"></td>
-
-      <td>
-        <a th:if="${loggedUser != null and loggedUser.role == 'ADMIN'}"
-           th:href="@{'/pets/edit/' + ${pet.id}}"
-           class="btn btn-sm btn-warning">Edit</a>
-
-        <a th:if="${loggedUser != null and loggedUser.role == 'ADMIN'}"
-           th:href="@{'/pets/delete/' + ${pet.id}}"
-           class="btn btn-sm btn-danger"
-           onclick="return confirm('Are you sure you want to delete this pet?');">
-          Delete
-        </a>
-      </td>
-
-    </tr>
+    <tbody id="petsBody">
     </tbody>
-
   </table>
+
 </div>
+
+<script th:inline="javascript">
+  window._isAdmin         = /*[[${loggedUser != null && loggedUser.role == 'ADMIN'}]]*/ false;
+  window._isAdminOrSeller = /*[[${loggedUser != null && (loggedUser.role == 'ADMIN' || loggedUser.role == 'SELLER')}]]*/ false;
+
+  window._i18n = {
+    noResults:     /*[[#{pets.noResults}]]*/ 'No pets found.',
+    loadError:     /*[[#{pets.loadError}]]*/ 'Failed to load pets.',
+    confirmDelete: /*[[#{pets.confirmDelete}]]*/ 'Are you sure you want to delete this pet?',
+    edit:          /*[[#{pets.edit}]]*/ 'Edit',
+    deleteBtn:     /*[[#{pets.delete}]]*/ 'Delete'
+  };
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/js/error-handler.js"></script>
+<script src="/js/pets.js"></script>
 
 </body>
 </html>

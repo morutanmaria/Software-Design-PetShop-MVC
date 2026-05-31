@@ -1,0 +1,34 @@
+/* main.css – PetShop Assignment 4 */
+
+/* Navbar */
+.navbar-brand i { color: #ffc107; }
+
+/* Chat message area */
+#messageArea {
+  scroll-behavior: smooth;
+}
+
+/* Connection status badge */
+#connectionStatus {
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+}
+
+/* Error toast */
+#errorToast {
+  font-size: 0.9rem;
+}
+
+/* Table images */
+.table img {
+  transition: transform 0.15s ease;
+}
+.table img:hover {
+  transform: scale(1.15);
+}
+
+/* Language switcher active badge */
+.navbar .badge {
+  font-size: 0.65rem;
+  vertical-align: middle;
+}

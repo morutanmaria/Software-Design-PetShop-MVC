@@ -8,7 +8,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.math.BigDecimal;
 
 @Controller
 @RequestMapping("/pets")
@@ -31,51 +31,47 @@ public class PetController {
 
     private boolean isAdminOrSeller(HttpSession session) {
         LoggedUser u = getLoggedUser(session);
-        return u != null && ("ADMIN".equals(u.getRole()) || "SELLER".equals(u.getRole()));
+        return u != null &&
+                ("ADMIN".equals(u.getRole())
+                        || "SELLER".equals(u.getRole()));
     }
 
     @GetMapping
-    public String getAllPets(@RequestParam(required = false) String search,
-                             @RequestParam(defaultValue = "name") String sortField,
-                             @RequestParam(defaultValue = "asc") String sortDir,
-                             Model model, HttpSession session) {
+    public String petsPage(Model model,
+                           HttpSession session) {
 
-        List<PetDTO> pets = petClient.getAllPets(search, sortField, sortDir);
-        model.addAttribute("pets", pets);
-        model.addAttribute("search", search);
-        model.addAttribute("sortField", sortField);
-        model.addAttribute("sortDir", sortDir);
+        model.addAttribute("isAdmin", isAdmin(session));
+        model.addAttribute("isAdminOrSeller", isAdminOrSeller(session));
+
         return "pets";
     }
 
     @GetMapping("/add")
     public String addPetPage(HttpSession session) {
-        if (!isAdminOrSeller(session)) return "redirect:/login";
+
+        if (!isAdminOrSeller(session))
+            return "redirect:/login";
+
         return "pet-form";
     }
 
-    @PostMapping("/save")
-    public String savePet(@RequestParam String name,
-                          @RequestParam String species,
-                          @RequestParam String breed,
-                          @RequestParam Integer age,
-                          @RequestParam Double price,
-                          HttpSession session) {
-
-        if (!isAdminOrSeller(session)) return "redirect:/login";
-        petClient.createPet(name, species, breed, age, price);
-        return "redirect:/pets";
-    }
-
     @GetMapping("/edit/{id}")
-    public String editPetPage(@PathVariable Integer id, Model model, HttpSession session) {
-        if (!isAdmin(session)) return "redirect:/login";
+    public String editPetPage(@PathVariable Integer id,
+                              Model model,
+                              HttpSession session) {
+
+        if (!isAdmin(session))
+            return "redirect:/login";
+
         PetDTO pet = petClient.getPetById(id);
-        if (pet == null) return "redirect:/pets";
+
+        if (pet == null)
+            return "redirect:/pets";
+
         model.addAttribute("pet", pet);
+
         return "pet-edit";
     }
-
     @PostMapping("/update")
     public String updatePet(@RequestParam Integer id,
                             @RequestParam String name,
@@ -83,17 +79,48 @@ public class PetController {
                             @RequestParam String breed,
                             @RequestParam Integer age,
                             @RequestParam Double price,
-                            HttpSession session) {
+                            HttpSession session,
+                            Model model) {
+        if (!isAdmin(session)) {
+            return "redirect:/login";
+        }
 
-        if (!isAdmin(session)) return "redirect:/login";
-        petClient.updatePet(id, name, species, breed, age, price);
-        return "redirect:/pets";
+        try {
+            petClient.updatePet(id, name, species, breed, age, price);
+            return "redirect:/pets";
+        } catch (Exception e) {
+            PetDTO fallbackPet = new PetDTO();
+            fallbackPet.setId(id);
+            fallbackPet.setName(name);
+            fallbackPet.setSpecies(species);
+            fallbackPet.setBreed(breed);
+            fallbackPet.setAge(age);
+            fallbackPet.setPrice(BigDecimal.valueOf(price));
+
+            model.addAttribute("pet", fallbackPet);
+            model.addAttribute("errorMessage", "Failed to update pet: " + e.getMessage());
+            return "pet-edit";
+        }
     }
 
-    @GetMapping("/delete/{id}")
-    public String deletePet(@PathVariable Integer id, HttpSession session) {
-        if (!isAdmin(session)) return "redirect:/login";
-        petClient.deletePet(id);
-        return "redirect:/pets";
+    @PostMapping("/add")
+    public String createPet(@RequestParam String name,
+                            @RequestParam String species,
+                            @RequestParam String breed,
+                            @RequestParam Integer age,
+                            @RequestParam Double price,
+                            HttpSession session,
+                            Model model) {
+        if (!isAdminOrSeller(session)) {
+            return "redirect:/login";
+        }
+
+        try {
+            petClient.createPet(name, species, breed, age, price);
+            return "redirect:/pets";
+        } catch (Exception e) {
+            model.addAttribute("errorMessage", "Failed to create pet: " + e.getMessage());
+            return "pet-form";
+        }
     }
 }

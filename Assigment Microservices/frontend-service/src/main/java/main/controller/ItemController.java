@@ -1,6 +1,7 @@
 package main.controller;
 
 import main.client.ItemClient;
+import main.client.PetClient;
 import main.dto.ItemDTO;
 import main.dto.LoggedUser;
 import main.dto.PetDTO;
@@ -16,9 +17,11 @@ import java.util.List;
 public class ItemController {
 
     private final ItemClient itemClient;
+    private final PetClient petClient;
 
-    public ItemController(ItemClient itemClient) {
+    public ItemController(ItemClient itemClient, PetClient petClient) {
         this.itemClient = itemClient;
+        this.petClient = petClient;
     }
 
     private LoggedUser getLoggedUser(HttpSession session) {
@@ -32,69 +35,103 @@ public class ItemController {
 
     private boolean isAdminOrSeller(HttpSession session) {
         LoggedUser u = getLoggedUser(session);
-        return u != null && ("ADMIN".equals(u.getRole()) || "SELLER".equals(u.getRole()));
+        return u != null &&
+                ("ADMIN".equals(u.getRole()) || "SELLER".equals(u.getRole()));
     }
 
     @GetMapping
-    public String getAllItems(Model model) {
-        List<ItemDTO> items = itemClient.getAllItems();
-        model.addAttribute("items", items);
+    public String itemsPage(Model model, HttpSession session) {
+        model.addAttribute("loggedUser", getLoggedUser(session));
+        model.addAttribute("isAdmin", isAdmin(session));
+        model.addAttribute("isAdminOrSeller", isAdminOrSeller(session));
+
         return "items";
     }
 
     @GetMapping("/add")
-    public String showAddForm(Model model, HttpSession session) {
-        if (!isAdminOrSeller(session)) return "redirect:/login";
-        List<PetDTO> pets = itemClient.getAvailablePets();
-        model.addAttribute("pets", pets);
-        model.addAttribute("item", new ItemDTO());
+    public String addItemPage(Model model, HttpSession session) {
+        if (!isAdminOrSeller(session)) {
+            return "redirect:/login";
+        }
+
+        List<PetDTO> availablePets = itemClient.getAvailablePets();
+        model.addAttribute("pets", availablePets);
+        model.addAttribute("currentLang", session.getAttribute("lang") != null ? session.getAttribute("lang") : "en");
+
         return "add-item";
     }
 
     @PostMapping("/add")
-    public String addItem(@RequestParam String name,
-                          @RequestParam String description,
-                          @RequestParam double price,
-                          @RequestParam String type,
-                          @RequestParam(required = false) String imagePath,
-                          @RequestParam Integer petId,
-                          HttpSession session) {
+    public String createItem(@RequestParam String name,
+                             @RequestParam(required = false) String description,
+                             @RequestParam double price,
+                             @RequestParam String type,
+                             @RequestParam(required = false) String imagePath,
+                             @RequestParam(required = false) Integer petId,
+                             HttpSession session,
+                             Model model) {
+        if (!isAdminOrSeller(session)) {
+            return "redirect:/login";
+        }
 
-        if (!isAdminOrSeller(session)) return "redirect:/login";
-        itemClient.createItem(name, description, price, type, imagePath, petId);
-        return "redirect:/items";
+        try {
+            itemClient.createItem(name, description, price, type, imagePath, petId);
+            return "redirect:/items";
+        } catch (Exception e) {
+            model.addAttribute("errorMessage", "Failed to create item: " + e.getMessage());
+            model.addAttribute("pets", itemClient.getAvailablePets());
+            return "add-item";
+        }
     }
 
     @GetMapping("/edit/{id}")
-    public String showEditForm(@PathVariable Integer id, Model model, HttpSession session) {
-        if (!isAdmin(session)) return "redirect:/items";
+    public String editItemPage(@PathVariable Integer id, Model model, HttpSession session) {
+        if (!isAdmin(session)) {
+            return "redirect:/login";
+        }
+
         ItemDTO item = itemClient.getItemById(id);
-        if (item == null) return "redirect:/items";
-        List<PetDTO> pets = itemClient.getAvailablePets();
+        if (item == null) {
+            return "redirect:/items";
+        }
+
         model.addAttribute("item", item);
-        model.addAttribute("pets", pets);
+        model.addAttribute("pets", itemClient.getAvailablePets());
+        model.addAttribute("currentLang", session.getAttribute("lang") != null ? session.getAttribute("lang") : "en");
+
         return "edit-item";
     }
 
     @PostMapping("/update")
     public String updateItem(@RequestParam Integer id,
                              @RequestParam String name,
-                             @RequestParam String description,
+                             @RequestParam(required = false) String description,
                              @RequestParam double price,
                              @RequestParam String type,
                              @RequestParam(required = false) String imagePath,
-                             @RequestParam Integer petId,
-                             HttpSession session) {
+                             @RequestParam(required = false) Integer petId,
+                             HttpSession session,
+                             Model model) {
+        if (!isAdmin(session)) {
+            return "redirect:/login";
+        }
 
-        if (!isAdmin(session)) return "redirect:/items";
-        itemClient.updateItem(id, name, description, price, type, imagePath, petId);
-        return "redirect:/items";
-    }
+        try {
+            itemClient.updateItem(id, name, description, price, type, imagePath, petId);
+            return "redirect:/items";
+        } catch (Exception e) {
+            ItemDTO fallbackDto = new ItemDTO();
+            fallbackDto.setId(id);
+            fallbackDto.setName(name);
+            fallbackDto.setDescription(description);
+            fallbackDto.setPrice(price);
+            fallbackDto.setType(type);
+            fallbackDto.setPetId(petId);
 
-    @GetMapping("/delete/{id}")
-    public String deleteItem(@PathVariable Integer id, HttpSession session) {
-        if (!isAdmin(session)) return "redirect:/items";
-        itemClient.deleteItem(id);
-        return "redirect:/items";
+            model.addAttribute("item", fallbackDto);
+            model.addAttribute("pets", itemClient.getAvailablePets());
+            model.addAttribute("errorMessage", "Failed to update item: " + e.getMessage());
+            return "edit-item";
+        }
     }
 }

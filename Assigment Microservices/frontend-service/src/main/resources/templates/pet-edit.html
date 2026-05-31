@@ -1,30 +1,67 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-  <title>Edit Pet</title>
+  <title th:text="#{pet.form.title.edit}">Edit Pet</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 
 <body class="bg-light">
 
+<div class="d-flex justify-content-end p-2 gap-2">
+  <a th:href="@{/pets/edit/{id}(id=${pet.id},lang=en)}"
+     th:classappend="${currentLang == 'en'} ? 'btn btn-sm btn-dark' : 'btn btn-sm btn-outline-dark'">
+    🇬🇧 EN
+  </a>
+  <a th:href="@{/pets/edit/{id}(id=${pet.id},lang=ro)}"
+     th:classappend="${currentLang == 'ro'} ? 'btn btn-sm btn-dark' : 'btn btn-sm btn-outline-dark'">
+    🇷🇴 RO
+  </a>
+</div>
+
 <div class="container mt-5" style="max-width: 500px;">
   <div class="card shadow p-4">
 
-    <h3>Edit Pet</h3>
+    <h3 th:text="#{pet.form.title.edit}">Edit Pet</h3>
+
+    <div th:if="${errorMessage}" class="alert alert-danger d-flex align-items-center mb-3" role="alert">
+      <i class="fa fa-circle-exclamation me-2"></i>
+      <span th:text="${errorMessage}"></span>
+    </div>
 
     <form action="/pets/update" method="post">
 
       <input type="hidden" name="id" th:value="${pet.id}">
 
-      <input class="form-control mb-2" name="name" th:value="${pet.name}">
-      <input class="form-control mb-2" name="species" th:value="${pet.species}">
-      <input class="form-control mb-2" name="breed" th:value="${pet.breed}">
-      <input class="form-control mb-2" name="age" th:value="${pet.age}">
-      <input class="form-control mb-2" name="price" th:value="${pet.price}">
+      <input class="form-control mb-2" name="name" th:value="${pet.name}"
+             th:placeholder="#{pet.form.name}">
+      <input class="form-control mb-2" name="species" th:value="${pet.species}"
+             th:placeholder="#{pet.form.species}">
+      <input class="form-control mb-2" name="breed" th:value="${pet.breed}"
+             th:placeholder="#{pet.form.breed}">
 
-      <button class="btn btn-warning w-100">Update</button>
+      <select class="form-select mb-2" name="gender">
+        <option value="Male"   th:selected="${pet.gender == 'Male'}">Male</option>
+        <option value="Female" th:selected="${pet.gender == 'Female'}">Female</option>
+      </select>
+
+      <input class="form-control mb-2" name="age"   th:value="${pet.age}"
+             type="number" th:placeholder="#{pet.form.age}">
+      <input class="form-control mb-2" name="price" th:value="${pet.price}"
+             type="number" step="0.01" th:placeholder="#{pet.form.price}">
+      <input class="form-control mb-2" name="imagePath" th:value="${pet.imagePath}"
+             th:placeholder="#{pet.form.imagePath}">
+
+      <div class="form-check mb-3">
+        <input class="form-check-input" type="checkbox" name="available" id="available"
+               th:checked="${pet.available}">
+        <label class="form-check-label" for="available" th:text="#{pet.form.available}">Available</label>
+      </div>
+
+      <div class="d-flex gap-2">
+        <button class="btn btn-warning w-100" th:text="#{pet.form.save}">Update</button>
+        <a href="/pets" class="btn btn-outline-secondary w-100" th:text="#{pet.form.cancel}">Cancel</a>
+      </div>
     </form>
 
   </div>

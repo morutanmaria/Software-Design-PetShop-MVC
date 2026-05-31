@@ -1,75 +1,103 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-  <title>Items</title>
+  <title th:text="#{items.title}">Items</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 
-<body class="bg-light">
-
-<div class="container mt-4">
-
-  <h2 class="mb-3">Items</h2>
-
-  <a th:if="${loggedUser != null and loggedUser.role == 'ADMIN'}"
-     href="/items/add" class="btn btn-success mb-3">
-    <i class="fa fa-plus"></i> Add Item
+<body class="p-4 bg-light"> <div class="d-flex justify-content-end mb-2 gap-2">
+  <a th:href="@{/items(lang=en)}"
+     th:classappend="${currentLang == 'en'} ? 'btn btn-sm btn-dark' : 'btn btn-sm btn-outline-dark'">
+    🇬🇧 EN
   </a>
+  <a th:href="@{/items(lang=ro)}"
+     th:classappend="${currentLang == 'ro'} ? 'btn btn-sm btn-dark' : 'btn btn-sm btn-outline-dark'">
+    🇷🇴 RO
+  </a>
+</div>
+
+<div id="errorToast" class="toast align-items-center text-bg-danger border-0 position-fixed bottom-0 end-0 m-3"
+     role="alert" aria-live="assertive" aria-atomic="true" style="z-index:9999; min-width:300px;">
+  <div class="d-flex">
+    <div class="toast-body" id="errorToastBody"></div>
+    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 th:text="#{items.title}">Items</h1> <div>
+    <a href="/" class="btn btn-outline-secondary btn-sm me-2">
+      <i class="fa-solid fa-house"></i> <span th:text="#{nav.home}">Home</span>
+    </a>
+    <a href="/chat" class="btn btn-outline-secondary btn-sm">
+      <i class="fa-solid fa-comments"></i> <span th:text="#{nav.chat}">Chat</span>
+    </a>
+  </div>
+  </div>
+
+  <div th:if="${loggedUser != null and loggedUser.role == 'ADMIN'}" class="mb-3">
+    <a href="/items/add" class="btn btn-success">
+      <i class="fa fa-plus"></i> <span th:text="#{items.addNew}">Add Item</span>
+    </a>
+  </div>
 
   <div class="mb-3">
     <form method="get" action="/export/items" class="d-inline">
       <input type="hidden" name="format" value="json">
-      <button type="submit" class="btn btn-primary">Export JSON</button>
+      <button type="submit" class="btn btn-primary" th:text="#{pets.export.json}">Export JSON</button>
     </form>
     <form method="get" action="/export/items" class="d-inline">
       <input type="hidden" name="format" value="csv">
-      <button type="submit" class="btn btn-secondary">Export CSV</button>
+      <button type="submit" class="btn btn-secondary" th:text="#{pets.export.csv}">Export CSV</button>
     </form>
     <form method="get" action="/export/items" class="d-inline">
       <input type="hidden" name="format" value="xml">
-      <button type="submit" class="btn btn-success">Export XML</button>
+      <button type="submit" class="btn btn-success" th:text="#{pets.export.xml}">Export XML</button>
     </form>
   </div>
 
-  <table class="table table-striped table-hover shadow">
-    <thead class="table-dark">
+  <table class="table table-striped table-hover align-middle" style="table-layout: fixed;">
+    <thead>
     <tr>
-      <th>Name</th>
-      <th>Type</th>
-      <th>Description</th>
-      <th>Price</th>
-      <th>Pet</th>
-      <th>Actions</th>
+      <th style="width: 80px;" th:text="#{pets.table.image}">Image</th> <th>
+      <span th:text="#{items.table.name}">Name</span>
+      <button onclick="changeSort('name','asc')" class="btn btn-sm btn-outline-success ms-1" type="button">↑</button>
+      <button onclick="changeSort('name','desc')" class="btn btn-sm btn-outline-danger ms-1" type="button">↓</button>
+    </th>
+      <th th:text="#{items.table.description}">Description</th>
+      <th th:text="#{items.table.type}">Type</th>
+      <th th:text="#{items.table.pet}">Pet</th>
+      <th>
+        <span th:text="#{items.table.price}">Price</span>
+        <button onclick="changeSort('price','asc')" class="btn btn-sm btn-outline-success ms-1" type="button">↑</button>
+        <button onclick="changeSort('price','desc')" class="btn btn-sm btn-outline-danger ms-1" type="button">↓</button>
+      </th>
+      <th th:text="#{items.table.actions}">Actions</th>
     </tr>
     </thead>
-    <tbody>
-    <tr th:each="item : ${items}" class="align-middle">
-      <td th:text="${item.name}"></td>
-      <td th:text="${item.type}"></td>
-      <td th:text="${item.description}"></td>
-      <td th:text="${item.price != null ? '$' + #numbers.formatDecimal(item.price, 1, 2) : '$0.00'}"></td>
-      <!-- FIXED: was item.pet.name — now item.petName (plain string from ItemDTO) -->
-      <td th:text="${item.petName != null ? item.petName : '-'}"></td>
-      <td>
-        <div th:if="${loggedUser?.role == 'ADMIN'}" class="btn-group">
-          <a th:href="@{/items/edit/{id}(id=${item.id})}" class="btn btn-warning btn-sm">
-            <i class="fa fa-edit"></i>
-          </a>
-          <a th:href="@{/items/delete/{id}(id=${item.id})}" class="btn btn-danger btn-sm"
-             onclick="return confirm('Delete this item?');">
-            <i class="fa fa-trash"></i>
-          </a>
-        </div>
-        <span th:unless="${loggedUser?.role == 'ADMIN'}" class="text-muted small">View Only</span>
-      </td>
-    </tr>
-    <tr th:if="${#lists.isEmpty(items)}">
-      <td colspan="6" class="text-center py-3 text-muted">No items found.</td>
-    </tr>
+    <tbody id="itemsBody">
     </tbody>
   </table>
 
 </div>
+
+<script th:inline="javascript">
+  window._isAdmin = /*[[${loggedUser != null && loggedUser.role == 'ADMIN'}]]*/ false;
+  window._i18n = {
+    noResults:     /*[[#{items.noResults}]]*/ 'No items found.',
+    loadError:     /*[[#{items.loadError}]]*/ 'Failed to load items.',
+    confirmDelete: /*[[#{items.confirmDelete}]]*/ 'Delete this item?',
+    edit:          /*[[#{items.edit}]]*/ 'Edit',
+    deleteBtn:     /*[[#{items.delete}]]*/ 'Delete'
+  };
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/js/error-handler.js"></script>
+<script src="/js/items.js"></script>
+
 </body>
 </html>

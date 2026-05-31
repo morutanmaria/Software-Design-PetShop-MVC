@@ -8,15 +8,15 @@
         <outputRelativeToContentRoot value="true" />
         <module name="notification-service" />
       </profile>
-      <profile name="Annotation profile for export-service" enabled="true">
+      <profile name="Annotation profile for pet-service" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <processorPath useClasspath="false">
           <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/unknown/lombok-unknown.jar" />
         </processorPath>
-        <module name="export-service" />
         <module name="item-service" />
+        <module name="export-service" />
         <module name="auth-service" />
         <module name="pet-service" />
       </profile>

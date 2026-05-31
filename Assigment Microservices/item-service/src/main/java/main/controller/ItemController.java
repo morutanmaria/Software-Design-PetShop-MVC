@@ -1,10 +1,12 @@
 package main.controller;
 
 import main.client.PetClient;
+import main.dto.ErrorResponse;
 import main.dto.ItemDTO;
 import main.dto.ItemRequest;
 import main.dto.PetDTO;
 import main.model.service.ItemService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,6 +14,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/items")
+@CrossOrigin(origins = "${frontend.service.url:http://localhost:8080}")
 public class ItemController {
 
     private final ItemService itemService;
@@ -31,7 +34,7 @@ public class ItemController {
     public ResponseEntity<ItemDTO> getItemById(@PathVariable Integer id) {
         return itemService.findById(id)
                 .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+                .orElseThrow(() -> new RuntimeException("Item not found with id: " + id));
     }
 
     @GetMapping("/by-pet/{petId}")
@@ -44,34 +47,28 @@ public class ItemController {
         return ResponseEntity.ok(petClient.getAllPets());
     }
 
-
     @PostMapping
     public ResponseEntity<ItemDTO> createItem(@RequestBody ItemRequest request) {
+        if (request.getName() == null || request.getName().isBlank()) {
+            throw new IllegalArgumentException("Item name must not be empty");
+        }
         if (request.getPetId() != null && petClient.getPetById(request.getPetId()) == null) {
-            return ResponseEntity.badRequest().build();
+            throw new IllegalArgumentException("Pet not found with id: " + request.getPetId());
         }
         ItemDTO created = itemService.save(request);
-        return ResponseEntity.ok(created);
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<ItemDTO> updateItem(@PathVariable Integer id,
-                                               @RequestBody ItemRequest request) {
-        try {
-            ItemDTO updated = itemService.update(id, request);
-            return ResponseEntity.ok(updated);
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
+                                              @RequestBody ItemRequest request) {
+        ItemDTO updated = itemService.update(id, request);
+        return ResponseEntity.ok(updated);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteItem(@PathVariable Integer id) {
-        try {
-            itemService.deleteById(id);
-            return ResponseEntity.noContent().build();
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
+        itemService.deleteById(id);
+        return ResponseEntity.noContent().build();
     }
 }
